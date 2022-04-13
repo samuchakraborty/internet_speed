@@ -82,7 +82,7 @@ class _MyHomePageState extends State<MyHomePage> {
   // }
   //
   static const stream =
-      const EventChannel('com.yourcompany.eventchannelsample/stream');
+  EventChannel('com.yourcompany.eventchannelsample/stream');
 
   // Object _timer = {};
   //StreamSubscription? _timerSubscription;
