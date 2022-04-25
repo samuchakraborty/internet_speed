@@ -1,15 +1,23 @@
 package com.example.connecting_li;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
+import androidx.core.content.ContextCompat;
 
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.EventChannel;
 
-import android.net.ConnectivityManager;
+import android.content.Intent;
+import android.os.Build;
+import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 
 import java.util.concurrent.TimeUnit;
+
+import io.flutter.plugin.common.MethodCall;
+import io.flutter.plugin.common.MethodChannel;
 
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -17,7 +25,6 @@ import io.reactivex.disposables.Disposable;
 
 
 public class MainActivity extends FlutterActivity {
-
 
     public static final String TAG = "eventchannelsample";
     public static final String STREAM = "com.yourcompany.eventchannelsample/stream";
@@ -30,12 +37,17 @@ public class MainActivity extends FlutterActivity {
     String upStreamS;
     String downStreamS;
 
+
+
     @Override
     public void configureFlutterEngine(@NonNull FlutterEngine flutterEngine) {
         super.configureFlutterEngine(flutterEngine);
-        ConnectivityManager cm = (ConnectivityManager) this.getSystemService(CONNECTIVITY_SERVICE);
+
+       // ContextCompat.startForegroundService(this, serviceIntent);
+        // ConnectivityManager cm = (ConnectivityManager) this.getSystemService(CONNECTIVITY_SERVICE);
         new EventChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), STREAM).setStreamHandler(
                 new EventChannel.StreamHandler() {
+                    @RequiresApi(api = Build.VERSION_CODES.O)
                     @Override
                     public void onListen(Object args, EventChannel.EventSink events) {
                         Log.w(TAG, "adding listener");
@@ -44,18 +56,22 @@ public class MainActivity extends FlutterActivity {
                                 .observeOn(AndroidSchedulers.mainThread())
                                 .subscribe(
                                         (Long timer) -> {
-//                                            NetworkCapabilities nc = cm.getNetworkCapabilities(cm.getActiveNetwork());
-//                                            double downSpeed = (nc.getLinkDownstreamBandwidthKbps()) ;
-//                                            double upSpeed = nc.getLinkUpstreamBandwidthKbps() ;
-//                                            Log.w(TAG, "emitting timer event " + timer);
-//                                            events.success(((((double) upSpeed / 8) ) )
-//                                            +"," + ((double) downSpeed / 8));
-//                                            events.success(obj.getClass());
+//
                                             mTrafficSpeedMeasurer = new TrafficSpeedMeasurer(TrafficSpeedMeasurer.TrafficType.ALL);
                                             mTrafficSpeedMeasurer.startMeasuring();
                                             mTrafficSpeedMeasurer.registerListener(mStreamSpeedListener);
+                                            // startService(upStreamS + ", " + downStreamS);
+
+//                                            Intent serviceIntent = new Intent(this,
+//                                                    ExampleService.class);
+
+startService(upStreamS);
+                                           // ContextCompat.startForegroundService(this, serviceIntent);
 
                                             events.success(upStreamS + ", " + downStreamS);
+
+
+
 //
 //                                            ITrafficSpeedListener mStreamSpeedListener = (upStream, downStream) -> runOnUiThread(new Runnable() {
 //                                                @Override
@@ -102,9 +118,8 @@ public class MainActivity extends FlutterActivity {
                 public void run() {
                     String upStreamSpeed = Utils.parseSpeed(upStream, SHOW_SPEED_IN_BITS);
                     String downStreamSpeed = Utils.parseSpeed(downStream, SHOW_SPEED_IN_BITS);
-                    Log.w(TAG, "upStreamSpeed " + upStreamSpeed);
-                    Log.w(TAG, "downStreamSpeed " + downStreamSpeed);
-                    downStreamS = downStreamSpeed;
+
+                  downStreamS = downStreamSpeed;
                     upStreamS = upStreamSpeed;
 //                    Log.e(TAG, "upStreamSpeed", upStreamSpeed);
                     // mTextView.setText("Up Stream Speed: " + upStreamSpeed + "\n" + "Down Stream Speed: " + downStreamSpeed);
@@ -113,29 +128,14 @@ public class MainActivity extends FlutterActivity {
         }
     };
 
-    public static class MainClass {
-        public int upSpeed;
+    public void startService(String input) {
 
-        public int getUpSpeed() {
-            return upSpeed;
-        }
 
-        public void setUpSpeed(int upSpeed) {
-            this.upSpeed = upSpeed;
-        }
+        Intent serviceIntent = new Intent(this, ExampleService.class);
+        serviceIntent.putExtra("inputExtra", input);
 
-        public int getDownSpeed() {
-            return downSpeed;
-        }
-
-        public void setDownSpeed(int downSpeed) {
-            this.downSpeed = downSpeed;
-        }
-
-        public int downSpeed;
-
+        ContextCompat.startForegroundService(this, serviceIntent);
     }
-
 
 }
 
